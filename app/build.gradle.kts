@@ -3,9 +3,9 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp) apply false
-    alias(libs.plugins.hilt) apply false
-    alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 // ORS key: local.properties on your machine, ORS_API_KEY env var in CI
@@ -66,7 +66,7 @@ dependencies {
 
     // DI
     implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
+    add("ksp", libs.hilt.compiler)
     implementation(libs.hilt.nav.compose)
 
     // Networking
@@ -78,7 +78,7 @@ dependencies {
     // Local cache
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    ksp(libs.room.compiler)
+    add("ksp",libs.room.compiler)
 
     // Async + location
     implementation(libs.coroutines.android)
