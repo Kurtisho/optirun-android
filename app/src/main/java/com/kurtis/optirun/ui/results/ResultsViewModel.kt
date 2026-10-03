@@ -31,6 +31,8 @@ sealed interface ResultsUiState {
         val requestedTerrain: TerrainPref,
         val routeError: String?,
         val usingDefaultLocation: Boolean,
+        val startLabel: String,
+        val routeLoading: Boolean = false,
     ) : ResultsUiState
 }
 
@@ -51,6 +53,15 @@ class ResultsViewModel @Inject constructor(
         distanceKm = args.distanceKm.toDouble(),
     )
 
+    private val chosenStart: LatLng? = run {
+        val lat = args.startLat?.toDoubleOrNull()
+        val lon = args.startLon?.toDoubleOrNull()
+        if (lat != null && lon != null) LatLng(lat, lon) else null
+    }
+
+    private var routeStart: LatLng? = null
+    private var seedOffset = 0
+
     private val _state = MutableStateFlow<ResultsUiState>(ResultsUiState.Loading)
     val state = _state.asStateFlow()
 
@@ -58,18 +69,21 @@ class ResultsViewModel @Inject constructor(
 
     fun load() = viewModelScope.launch {
         _state.value = ResultsUiState.Loading
-        val here = locationProvider.current()
+        val here = chosenStart ?: locationProvider.current()
         val start = here ?: DEFAULT_LOCATION
+        routeStart = start
+        seedOffset = 0
 
         _state.value = try {
             coroutineScope {
                 // Weather and routes are fetched at the same time
                 val hoursJob = async { weatherRepo.hourly(start.lat, start.lon) }
-                val routesJob = async { runCatching { routeRepo.loops(start, prefs.distanceKm) } }
+                val routesJob = async { runCatching { routeRepo.loops(start, prefs.distanceKm, seedsFor(0)) } }
 
                 val windows = matcher.findWindows(hoursJob.await(), prefs, LocalDateTime.now())
                 val routes = routesJob.await()
                 val best = routes.getOrNull()?.let { classifier.pickBest(it, prefs.terrain, prefs.distanceKm) }
+
                 ResultsUiState.Success(
                     windows = windows,
                     route = best,
@@ -77,6 +91,7 @@ class ResultsViewModel @Inject constructor(
                     requestedTerrain = prefs.terrain,
                     routeError = routes.exceptionOrNull()?.message,
                     usingDefaultLocation = here == null,
+                    startLabel = args.startLabel ?: if (here != null) "Your location" else "Downtown Vancouver",
                 )
             }
         } catch (e: CancellationException) {
@@ -86,7 +101,31 @@ class ResultsViewModel @Inject constructor(
         }
     }
 
+    fun newRoute() {
+        val current = _state.value as? ResultsUiState.Success ?: return
+        val from = routeStart ?: return
+        if (current.routeLoading) return
+
+        seedOffset += SEEDS_PER_BATCH
+        _state.value = current.copy(routeLoading = true)
+
+        viewModelScope.launch {
+            val routes = runCatching { routeRepo.loops(from, prefs.distanceKm, seedsFor(seedOffset)) }
+            val best = routes.getOrNull()?.let { classifier.pickBest(it, prefs.terrain, prefs.distanceKm) }
+            val shown = best ?: current.route   // keep the old route if the new search fails
+            _state.value = current.copy(
+                route = shown,
+                routeTerrain = shown?.let { classifier.classify(it) },
+                routeError = if (best == null) routes.exceptionOrNull()?.message ?: "No other routes found" else null,
+                routeLoading = false,
+            )
+        }
+    }
+
+    private fun seedsFor(offset: Int) = (offset + 1..offset + SEEDS_PER_BATCH).toList()
+
     companion object {
         val DEFAULT_LOCATION = LatLng(49.2827, -123.1207)  // downtown Vancouver
+        const val SEEDS_PER_BATCH = 3
     }
 }

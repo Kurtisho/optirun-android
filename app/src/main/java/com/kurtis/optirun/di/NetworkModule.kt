@@ -12,6 +12,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -21,7 +22,10 @@ object NetworkModule {
     fun json(): Json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
     @Provides @Singleton
-    fun okHttp(): OkHttpClient = OkHttpClient.Builder().build()
+    fun okHttp(): OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)   // route generation can be slow
+        .build()
 
     private fun retrofit(baseUrl: String, client: OkHttpClient, json: Json): Retrofit =
         Retrofit.Builder()

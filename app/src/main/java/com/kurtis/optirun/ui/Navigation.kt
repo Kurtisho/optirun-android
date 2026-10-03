@@ -9,15 +9,33 @@ import com.kurtis.optirun.ui.results.ResultsScreen
 import kotlinx.serialization.Serializable
 
 @Serializable object HomeRoute
-@Serializable data class ResultsRoute(val weather: String, val terrain: String, val distanceKm: Int)
+
+@Serializable
+data class ResultsRoute(
+    val weather: String,
+    val terrain: String,
+    val distanceKm: Int,
+    val startLat: String? = null,
+    val startLon: String? = null,
+    val startLabel: String? = null,
+)
 
 @Composable
 fun OptiRunNavHost() {
     val nav = rememberNavController()
     NavHost(navController = nav, startDestination = HomeRoute) {
         composable<HomeRoute> {
-            HomeScreen(onFind = { p ->
-                nav.navigate(ResultsRoute(p.weather.name, p.terrain.name, p.distanceKm.toInt()))
+            HomeScreen(onFind = { p, place ->
+                nav.navigate(
+                    ResultsRoute(
+                        weather = p.weather.name,
+                        terrain = p.terrain.name,
+                        distanceKm = p.distanceKm.toInt(),
+                        startLat = place?.location?.lat?.toString(),
+                        startLon = place?.location?.lon?.toString(),
+                        startLabel = place?.label,
+                    )
+                )
             })
         }
         composable<ResultsRoute> {

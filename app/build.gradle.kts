@@ -9,12 +9,16 @@ plugins {
 }
 
 // ORS key: local.properties on your machine, ORS_API_KEY env var in CI
+
+// API keys: local.properties on your machine, env vars in CI
 val localProps = Properties().apply {
     val f = rootProject.file("local.properties")
     if (f.exists()) f.inputStream().use { load(it) }
 }
 val orsApiKey: String =
     localProps.getProperty("ORS_API_KEY") ?: System.getenv("ORS_API_KEY") ?: ""
+val mapsApiKey: String =
+    localProps.getProperty("MAPS_API_KEY") ?: System.getenv("MAPS_API_KEY") ?: ""
 
 android {
     namespace = "com.kurtis.optirun"
@@ -32,6 +36,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "ORS_API_KEY", "\"$orsApiKey\"")
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     buildTypes {
@@ -83,6 +88,7 @@ dependencies {
     // Async + location
     implementation(libs.coroutines.android)
     implementation(libs.play.location)
+    implementation(libs.maps.compose)
 
     // Tests
     testImplementation(libs.junit)
@@ -94,4 +100,14 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+// Hilt bundles a Kotlin metadata reader that only supports up to Kotlin 2.3.
+// Force the newer one so it can read Kotlin 2.4 classes.
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlin" && requested.name == "kotlin-metadata-jvm") {
+            useVersion("2.4.20")
+        }
+    }
 }
