@@ -8,7 +8,7 @@ import javax.inject.Singleton
 @Singleton
 class WeatherRepo @Inject constructor(private val api: OpenMeteoApi) {
     suspend fun hourly(lat: Double, lon: Double): List<HourlyWeather> {
-        val h = api.forecast(lat, lon).hourly
+        val h = api.forecast(lat, lon, tz = java.time.ZoneId.systemDefault().id).hourly
         return h.time.indices.map { i ->
             HourlyWeather(
                 time = LocalDateTime.parse(h.time[i]),

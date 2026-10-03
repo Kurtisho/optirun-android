@@ -10,4 +10,5 @@ data class RunPreferences(
     val durationHours: Int = 1,
     val earliestHour: Int = 6,   // no runs starting before 6am
     val latestHour: Int = 21,    // must finish by 9pm
+    val horizonDays: Int = 7,
 )

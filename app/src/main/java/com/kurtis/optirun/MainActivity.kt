@@ -4,15 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.kurtis.optirun.ui.home.HomeScreen
+import com.kurtis.optirun.ui.OptiRunNavHost
 import com.kurtis.optirun.ui.theme.OptiRunTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -23,9 +19,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             OptiRunTheme {
-                Scaffold { padding ->
-                    Box(Modifier.padding(padding)) { HomeScreen() }
-                }
+                OptiRunNavHost()
             }
         }
     }

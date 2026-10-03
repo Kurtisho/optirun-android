@@ -30,4 +30,14 @@ class TerrainClassifierTest {
 
     @Test fun `pickBest on empty list returns null`() =
         assertNull(classifier.pickBest(emptyList(), TerrainPref.FLAT))
+
+    @Test fun `pickBest ignores routes far from target distance`() {
+        val routes = listOf(route(5.0, 100.0), route(12.0, 10.0))
+        assertEquals(5.0, classifier.pickBest(routes, TerrainPref.FLAT, targetKm = 5.0)!!.distanceKm, 0.0)
+    }
+
+    @Test fun `pickBest falls back to closest distance when none are near`() {
+        val routes = listOf(route(12.0, 10.0), route(9.0, 100.0))
+        assertEquals(9.0, classifier.pickBest(routes, TerrainPref.FLAT, targetKm = 5.0)!!.distanceKm, 0.0)
+    }
 }
