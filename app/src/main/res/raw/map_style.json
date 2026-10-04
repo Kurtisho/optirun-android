@@ -1,0 +1,7 @@
+[
+  { "featureType": "poi.business", "stylers": [{ "visibility": "off" }] },
+  { "featureType": "transit", "stylers": [{ "visibility": "off" }] },
+  { "featureType": "road", "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] },
+  { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#d4ebcf" }] },
+  { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#c2deef" }] }
+]
